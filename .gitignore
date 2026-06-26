@@ -1,0 +1,6 @@
+# local Go workspace (copy from go.work.dev)
+go.work
+go.work.sum
+# build crumbs
+*.test
+*.out
