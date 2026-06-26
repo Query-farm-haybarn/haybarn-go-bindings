@@ -135,19 +135,19 @@ To use your own DuckDB static library instead of the pre-built ones, use the `du
 # Darwin/macOS
 CGO_ENABLED=1 \
   CPPFLAGS="-DDUCKDB_STATIC_BUILD" \
-  CGO_LDFLAGS="-lduckdb -lc++ -L/path/to/lib" \
+  CGO_LDFLAGS="-lhaybarn -lc++ -L/path/to/lib" \
   go build -tags=duckdb_use_static_lib
 
 # Linux
 CGO_ENABLED=1 \
   CPPFLAGS="-DDUCKDB_STATIC_BUILD" \
-  CGO_LDFLAGS="-lduckdb -lstdc++ -lm -ldl -L/path/to/lib" \
+  CGO_LDFLAGS="-lhaybarn -lstdc++ -lm -ldl -L/path/to/lib" \
   go build -tags=duckdb_use_static_lib
 
 # Windows
 CGO_ENABLED=1 \
   CPPFLAGS="-DDUCKDB_STATIC_BUILD" \
-  CGO_LDFLAGS="-lduckdb -lws2_32 -lwsock32 -lrstrtmgr -lstdc++ -lm --static -L/path/to/lib" \
+  CGO_LDFLAGS="-lhaybarn -lws2_32 -lwsock32 -lrstrtmgr -lstdc++ -lm --static -L/path/to/lib" \
   go build -tags=duckdb_use_static_lib
 ```
 
@@ -158,13 +158,13 @@ To link against a shared DuckDB library, use the `duckdb_use_lib` build tag:
 ```bash
 # Darwin/macOS
 CGO_ENABLED=1 \
-  CGO_LDFLAGS="-lduckdb -L/path/to/dir" \
+  CGO_LDFLAGS="-lhaybarn -L/path/to/dir" \
   DYLD_LIBRARY_PATH=/path/to/dir \
   go build -tags=duckdb_use_lib
 
 # Linux
 CGO_ENABLED=1 \
-  CGO_LDFLAGS="-lduckdb -L/path/to/dir" \
+  CGO_LDFLAGS="-lhaybarn -L/path/to/dir" \
   LD_LIBRARY_PATH=/path/to/dir \
   go build -tags=duckdb_use_lib
 ```
