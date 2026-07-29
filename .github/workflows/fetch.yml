@@ -1,3 +1,5 @@
+# Re-vendors the pre-built engine static libraries from a Haybarn engine
+# release into lib/<platform>/. Bump HAYBARN_VERSION in the Makefile first.
 name: Fetch and Push Libs
 on:
   workflow_dispatch:
