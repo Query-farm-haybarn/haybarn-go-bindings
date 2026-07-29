@@ -6,7 +6,7 @@
 # and haybarn-extensions.query.farm URLs baked in) plus the unchanged extension
 # and third-party archives.
 HAYBARN_REPO=Query-farm-haybarn/haybarn
-HAYBARN_VERSION=haybarn-v1.5.4-rc2
+HAYBARN_VERSION=haybarn-v1.5.5-rc1
 
 fetch.static.libs:
 	cd lib/${PLATFORM} && \
