@@ -6,6 +6,12 @@ on:
 jobs:
   fetch-libs:
     runs-on: ubuntu-latest
+    # The Commit step pushes the refreshed lib/<platform>/*.a back to this
+    # branch, which the ambient GITHUB_TOKEN cannot do at the default
+    # (read-only) contents permission — it fails with a 403 from
+    # github-actions[bot] after having already built the commit locally.
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
