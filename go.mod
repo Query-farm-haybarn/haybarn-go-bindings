@@ -3,11 +3,11 @@ module github.com/Query-farm-haybarn/haybarn-go-bindings
 go 1.24
 
 require (
-	github.com/Query-farm-haybarn/haybarn-go-bindings/lib/darwin-amd64 v0.10504.0
-	github.com/Query-farm-haybarn/haybarn-go-bindings/lib/darwin-arm64 v0.10504.0
-	github.com/Query-farm-haybarn/haybarn-go-bindings/lib/linux-amd64 v0.10504.0
-	github.com/Query-farm-haybarn/haybarn-go-bindings/lib/linux-arm64 v0.10504.0
-	github.com/Query-farm-haybarn/haybarn-go-bindings/lib/windows-amd64 v0.10504.0
+	github.com/Query-farm-haybarn/haybarn-go-bindings/lib/darwin-amd64 v0.10505.0
+	github.com/Query-farm-haybarn/haybarn-go-bindings/lib/darwin-arm64 v0.10505.0
+	github.com/Query-farm-haybarn/haybarn-go-bindings/lib/linux-amd64 v0.10505.0
+	github.com/Query-farm-haybarn/haybarn-go-bindings/lib/linux-arm64 v0.10505.0
+	github.com/Query-farm-haybarn/haybarn-go-bindings/lib/windows-amd64 v0.10505.0
 )
 
 require (
