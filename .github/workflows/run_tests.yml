@@ -25,23 +25,30 @@ jobs:
     strategy:
       matrix:
         include:
-          # windows-amd64 needs a MinGW static-libs archive, which the Haybarn
-          # engine release doesn't build yet.
           - &darwin-amd64 { platform: darwin-amd64, runner: macos-15-intel }
           - &darwin-arm64 { platform: darwin-arm64, runner: macos-26 }
           - &linux-amd64 { platform: linux-amd64, runner: ubuntu-24.04 }
           - &linux-arm64 { platform: linux-arm64, runner: ubuntu-24.04-arm }
+          - { platform: windows-amd64, runner: windows-2025 }
       fail-fast: false
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
+      - name: Seed interim archives
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: scripts/seed-interim.sh
       # Until the pinned native modules are published at the origin, package
       # them from the pinned release archives and test through a local module
       # proxy (same bytes and go.sum hashes as the published modules).
       - name: Test ${{ matrix.platform }}
         run: |
+          # An interim archive comes from another engine commit than the pin.
+          if source=$(jq -er --arg p "${{ matrix.platform }}" '.interim[$p].source // empty' duckdb-release.json); then
+            export DUCKDB_SHA="$source"
+          fi
           info="$(jq -r .origin duckdb-release.json)/modules/$(jq -r '.origin | sub("^https://"; "")' duckdb-release.json)/libhaybarn/${{ matrix.platform }}/@v/$(jq -r .version duckdb-release.json).info"
           if curl -fsS -o /dev/null "$info"; then
             make test
@@ -70,6 +77,10 @@ jobs:
       - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
+      - name: Seed interim archives
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: scripts/seed-interim.sh
       - name: Test ${{ matrix.platform }}
         run: make test.dynamic
 
@@ -93,5 +104,9 @@ jobs:
       - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
+      - name: Seed interim archives
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: scripts/seed-interim.sh
       - name: Test ${{ matrix.platform }}
         run: make test.static

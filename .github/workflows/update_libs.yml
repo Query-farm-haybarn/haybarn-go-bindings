@@ -33,6 +33,14 @@ jobs:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
+      # Interim archives come from a CI run, not a release: neither reproducible
+      # from base_url nor built from the pinned source.
+      - name: Refuse interim archives
+        run: |
+          if [[ "$(jq '.interim // {} | length' duckdb-release.json)" != 0 ]]; then
+            echo "::error::duckdb-release.json pins interim archives; re-pin to an engine release first."
+            exit 1
+          fi
       - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
