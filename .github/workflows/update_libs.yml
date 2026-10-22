@@ -12,17 +12,18 @@ defaults:
 
 jobs:
   update-libs:
-    runs-on: ${{ github.repository_owner == 'duckdb' && 'namespace-profile-linux-small' || 'ubuntu-24.04' }}
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
-      LIB_DESTINATION: remote:duckdb-go
+      # The Haybarn extensions bucket, served at the origin in duckdb-release.json.
+      LIB_DESTINATION: remote:${{ secrets.R2_BUCKET }}/go
     steps:
       # Forks don't get the bucket secrets, so a run there would push a pin for a
       # version it can't publish.
       - name: Require this repository
-        if: github.repository != 'duckdb/duckdb-go-bindings'
+        if: github.repository != 'Query-farm-haybarn/haybarn-go-bindings'
         run: |
-          echo "::error::Run this in duckdb/duckdb-go-bindings: forks don't get the bucket secrets."
+          echo "::error::Run this in Query-farm-haybarn/haybarn-go-bindings: forks don't get the bucket secrets."
           exit 1
       - name: Require a branch other than the default
         if: github.ref_type != 'branch' || github.ref_name == github.event.repository.default_branch
@@ -61,9 +62,10 @@ jobs:
         env: &bucket
           RCLONE_CONFIG_REMOTE_TYPE: s3
           RCLONE_CONFIG_REMOTE_PROVIDER: Cloudflare
-          RCLONE_CONFIG_REMOTE_ACCESS_KEY_ID: ${{ secrets.DUCKDB_GO_BUCKET_ACCESS_KEY_ID }}
-          RCLONE_CONFIG_REMOTE_SECRET_ACCESS_KEY: ${{ secrets.DUCKDB_GO_BUCKET_SECRET_ACCESS_KEY }}
-          RCLONE_CONFIG_REMOTE_ENDPOINT: ${{ secrets.DUCKDB_GO_BUCKET_ENDPOINT_URL_S3 }}
+          RCLONE_CONFIG_REMOTE_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          # The org secret R2_SECRET_KEY_ID holds the secret half of the key.
+          RCLONE_CONFIG_REMOTE_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_KEY_ID }}
+          RCLONE_CONFIG_REMOTE_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
           RCLONE_CONFIG_REMOTE_REGION: auto
           RCLONE_CONFIG_REMOTE_NO_CHECK_BUCKET: "true"
         run: make publish.libs

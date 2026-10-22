@@ -2,8 +2,8 @@ name: Tests
 on:
   push:
     branches:
-      - main
-      - "v[0-9]*"
+      - haybarn
+      - "haybarn-[0-9]*"
   pull_request:
   workflow_dispatch:
 
@@ -11,59 +11,54 @@ permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.head_ref || '' }}-${{ github.base_ref || '' }}-${{ github.ref != 'refs/heads/main' || github.sha }}
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.head_ref || '' }}-${{ github.base_ref || '' }}-${{ github.sha }}
   cancel-in-progress: true
 
 jobs:
   go-tests:
     name: Test Pre-Built Libs
-    runs-on: &runner ${{ github.repository_owner == 'duckdb' && matrix.namespace || matrix.github }}
-    timeout-minutes: 15
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
     defaults:
       run:
         shell: bash
     strategy:
       matrix:
-        platform:
-          - darwin-amd64
-          - darwin-arm64
-          - linux-amd64
-          - linux-arm64
-          - windows-amd64
-        # Keep native Intel coverage after merge without delaying PR checks.
-        exclude: &skip-intel-on-pr ${{ fromJSON(github.event_name == 'pull_request' && '[{"platform":"darwin-amd64"}]' || '[]') }}
         include:
-          # Includes run after exclusions; do not reintroduce Intel on PRs.
-          # Intel has no Namespace profile, so runs-on falls back to github.
-          - &darwin-amd64 ${{ fromJSON(github.event_name == 'pull_request' && '[]' || '[{"platform":"darwin-amd64","github":"macos-15-intel"}]') }}
-          - &darwin-arm64 { platform: darwin-arm64, github: macos-26, namespace: namespace-profile-macos-arm64 }
-          - &linux-amd64 { platform: linux-amd64, github: ubuntu-24.04, namespace: namespace-profile-linux-small }
-          - &linux-arm64 { platform: linux-arm64, github: ubuntu-24.04-arm, namespace: namespace-profile-linux-arm64-small }
-          - { platform: windows-amd64, github: windows-2025, namespace: namespace-profile-windows-x64 }
+          # windows-amd64 needs a MinGW static-libs archive, which the Haybarn
+          # engine release doesn't build yet.
+          - &darwin-amd64 { platform: darwin-amd64, runner: macos-15-intel }
+          - &darwin-arm64 { platform: darwin-arm64, runner: macos-26 }
+          - &linux-amd64 { platform: linux-amd64, runner: ubuntu-24.04 }
+          - &linux-arm64 { platform: linux-arm64, runner: ubuntu-24.04-arm }
       fail-fast: false
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
+      # Until the pinned native modules are published at the origin, package
+      # them from the pinned release archives and test through a local module
+      # proxy (same bytes and go.sum hashes as the published modules).
       - name: Test ${{ matrix.platform }}
-        run: make test
+        run: |
+          info="$(jq -r .origin duckdb-release.json)/modules/$(jq -r '.origin | sub("^https://"; "")' duckdb-release.json)/libhaybarn/${{ matrix.platform }}/@v/$(jq -r .version duckdb-release.json).info"
+          if curl -fsS -o /dev/null "$info"; then
+            make test
+          else
+            echo "::notice::$info is not published; testing the packaged modules"
+            make test.packaged
+          fi
 
   dynamic-lib-tests:
     name: Test Dynamic Libs
-    runs-on: *runner
-    timeout-minutes: 15
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
     defaults:
       run:
         shell: bash
     strategy:
       matrix:
-        platform:
-          - darwin-amd64
-          - darwin-arm64
-          - linux-amd64
-          - linux-arm64
-        exclude: *skip-intel-on-pr
         include:
           - *darwin-amd64
           - *darwin-arm64
@@ -80,19 +75,13 @@ jobs:
 
   static-lib-tests:
     name: Test Static Libs
-    runs-on: *runner
-    timeout-minutes: 15
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
     defaults:
       run:
         shell: bash
     strategy:
       matrix:
-        platform:
-          - darwin-amd64
-          - darwin-arm64
-          - linux-amd64
-          - linux-arm64
-        exclude: *skip-intel-on-pr
         include:
           - *darwin-amd64
           - *darwin-arm64

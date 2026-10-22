@@ -20,10 +20,16 @@ publish.libs:
 test:
 	./scripts/test.sh
 
+# Package the pinned native modules and test them through a local module proxy,
+# for a pin that isn't published yet.
+test.packaged:
+	$(BROOD) package
+	./scripts/test.sh packaged
+
 test.static:
 	./scripts/test.sh static
 
 test.dynamic:
 	./scripts/test.sh dynamic
 
-.PHONY: use.libs unuse.libs update.libs publish.libs test test.static test.dynamic
+.PHONY: use.libs unuse.libs update.libs publish.libs test test.packaged test.static test.dynamic
