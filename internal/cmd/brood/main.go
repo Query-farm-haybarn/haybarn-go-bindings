@@ -1,4 +1,4 @@
-// Command brood packages DuckDB's static libraries as Go modules, one per
+// Command brood packages Haybarn's static libraries as Go modules, one per
 // platform, and publishes them with rclone. Run it from the repository root:
 //
 //	go run ./internal/cmd/brood fetch|fetch-shared|use|env|package|pin|upload
@@ -26,7 +26,7 @@ import (
 
 const (
 	manifestFile = "duckdb-release.json"
-	modulePath   = "libduckdb" // below the origin
+	modulePath   = "libhaybarn" // below the origin
 )
 
 type manifest struct {
@@ -113,7 +113,7 @@ func load() *release {
 // workDir creates and resolves LIB_WORK. It must be outside the checkout, so
 // downloads and packaged modules never end up in it.
 func workDir() string {
-	work, err := filepath.Abs(cmp.Or(os.Getenv("LIB_WORK"), filepath.Join(os.TempDir(), "duckdb-go-libraries")))
+	work, err := filepath.Abs(cmp.Or(os.Getenv("LIB_WORK"), filepath.Join(os.TempDir(), "haybarn-go-libraries")))
 	check(err)
 	mkdir(work)
 	work, err = filepath.EvalSymlinks(work)

@@ -4,7 +4,7 @@ package duckdb_go_bindings
 
 /*
 #cgo CPPFLAGS: -I${SRCDIR}/include
-#cgo LDFLAGS: -lduckdb
+#cgo LDFLAGS: -lhaybarn
 #include <duckdb.h>
 */
 import "C"

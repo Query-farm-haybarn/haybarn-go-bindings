@@ -2,6 +2,7 @@ package main
 
 import (
 	"archive/tar"
+	"archive/zip"
 	"compress/gzip"
 	"fmt"
 	"io"
@@ -89,14 +90,16 @@ func (r *release) rootPrebuilt(platform string) (name string, data []byte) {
 
 // stage downloads platform's static archive and lays out its module in
 // LIB_WORK/native/<platform>. The header goes to LIB_WORK/headers/<platform>,
-// outside the module.
+// outside the module. Haybarn renames the engine archive (libhaybarn_static.a)
+// and the release asset; the extension and capability archives keep DuckDB's
+// names.
 func (r *release) stage(platform string) {
 	a := r.Platforms[platform]
-	url := r.BaseURL + "/duckdb-static-libs-" + a.Static + ".tar.gz"
+	url := r.BaseURL + "/haybarn-static-libs-" + a.Static + ".tar.gz"
 	archive, digest := r.archive(url, a.StaticSHA256)
 
 	dest := r.native(platform)
-	members := []string{"duckdb.h", "duckdb_static_extension.h", "libduckdb_static.a"}
+	members := []string{"duckdb.h", "duckdb_static_extension.h", "libhaybarn_static.a"}
 	for _, lib := range libraries() {
 		members = append(members, "lib"+lib+".a")
 	}
@@ -119,17 +122,18 @@ func (r *release) stage(platform string) {
 
 // stageShared fetches the shared library and checks its header against the one
 // used to compile the bindings (the pin, or the header installed by use).
+// Haybarn releases the shared library as libhaybarn-<platform>.zip.
 func (r *release) stageShared(platform string) {
 	a := r.Platforms[platform]
-	archive, _ := r.archive(r.BaseURL+"/duckdb-shared-libs-"+a.Shared+".tar.gz", a.SharedSHA256)
+	archive, _ := r.archive(r.BaseURL+"/libhaybarn-"+a.Shared+".zip", a.SharedSHA256)
 	goos, _, _ := strings.Cut(platform, "-")
 	members := map[string][]string{
-		"darwin":  {"duckdb.h", "libduckdb.dylib"},
-		"linux":   {"duckdb.h", "libduckdb.so"},
-		"windows": {"duckdb.h", "duckdb.dll", "duckdb.lib"},
+		"darwin":  {"duckdb.h", "libhaybarn.dylib"},
+		"linux":   {"duckdb.h", "libhaybarn.so"},
+		"windows": {"duckdb.h", "haybarn.dll", "haybarn.lib"},
 	}[goos]
 	dest := r.dynamic(platform)
-	extract(archive, dest, members)
+	extractZip(archive, dest, members)
 	checkSameHeader("include/duckdb.h", filepath.Join(dest, "duckdb.h"))
 }
 
@@ -167,7 +171,7 @@ func ldflags(goos string) []string {
 	for _, lib := range libraries() {
 		flags = append(flags, "-l"+lib)
 	}
-	flags = append(flags, "-lduckdb_static")
+	flags = append(flags, "-lhaybarn_static")
 	switch goos {
 	case "darwin":
 		flags = append(flags, "-lc++")
@@ -208,5 +212,33 @@ func extract(archive, dir string, names []string) {
 			delete(missing, name)
 			writeFrom(filepath.Join(dir, name), tr)
 		}
+	}
+}
+
+// extractZip copies the named members of a .zip archive into an emptied dir.
+func extractZip(archive, dir string, names []string) {
+	check(os.RemoveAll(dir))
+	mkdir(dir)
+	zr, err := zip.OpenReader(archive)
+	if err != nil {
+		fail("%s: %v", archive, err)
+	}
+	defer closeRead(zr)
+
+	missing := make(map[string]bool)
+	for _, name := range names {
+		missing[name] = true
+	}
+	for _, f := range zr.File {
+		if name := strings.TrimPrefix(f.Name, "./"); missing[name] {
+			delete(missing, name)
+			rc, err := f.Open()
+			check(err)
+			writeFrom(filepath.Join(dir, name), rc)
+			closeRead(rc)
+		}
+	}
+	if len(missing) > 0 {
+		fail("%s lacks %s", archive, strings.Join(slices.Sorted(maps.Keys(missing)), ", "))
 	}
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"archive/tar"
+	"archive/zip"
 	"bytes"
 	"compress/gzip"
 	"crypto/sha256"
@@ -100,16 +101,16 @@ func fixtureRelease(t *testing.T, platform string) *release {
 	writeFile("LICENSE", []byte("fixture license\n"))
 	writeFile("go.mod", fmt.Appendf(nil, "module example.com/bindings\n\ngo 1.24\n\nrequire example.com/native/%s v0.0.1\n", platform))
 	static := map[string]string{
-		"duckdb.h": "header\n", "duckdb_static_extension.h": "static header\n", "libduckdb_static.a": "library",
+		"duckdb.h": "header\n", "duckdb_static_extension.h": "static header\n", "libhaybarn_static.a": "library",
 	}
-	// These are the upstream filenames, independent of the generator's lists.
+	// These are the release filenames, independent of the generator's lists.
 	for _, name := range []string{"duckdb_httplib", "duckdb_loadable_extensions", "autocomplete_extension", "core_functions_extension", "icu_extension", "json_extension", "parquet_extension", "tpcds_extension", "tpch_extension"} {
 		static["lib"+name+".a"] = "library"
 	}
-	shared := map[string]string{"duckdb.h": "header\r\n", "libduckdb.dylib": "library", "libduckdb.so": "library", "duckdb.dll": "library", "duckdb.lib": "import library"}
+	shared := map[string]string{"duckdb.h": "header\r\n", "libhaybarn.dylib": "library", "libhaybarn.so": "library", "haybarn.dll": "library", "haybarn.lib": "import library"}
 	archives := map[string][]byte{
-		"/duckdb-static-libs-static-name.tar.gz": tarball(t, static),
-		"/duckdb-shared-libs-shared-name.tar.gz": tarball(t, shared),
+		"/haybarn-static-libs-static-name.tar.gz": tarball(t, static),
+		"/libhaybarn-shared-name.zip":             zipball(t, shared),
 	}
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		if data, ok := archives[req.URL.Path]; ok {
@@ -137,6 +138,20 @@ func tarball(t *testing.T, files map[string]string) []byte {
 	}
 	require.NoError(t, tw.Close())
 	require.NoError(t, gz.Close())
+	return buf.Bytes()
+}
+
+func zipball(t *testing.T, files map[string]string) []byte {
+	t.Helper()
+	var buf bytes.Buffer
+	zw := zip.NewWriter(&buf)
+	for name, data := range files {
+		w, err := zw.Create(name)
+		require.NoError(t, err)
+		_, err = w.Write([]byte(data))
+		require.NoError(t, err)
+	}
+	require.NoError(t, zw.Close())
 	return buf.Bytes()
 }
 
