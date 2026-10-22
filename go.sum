@@ -62,3 +62,5 @@ haybarn-extensions.query.farm/go/libhaybarn/linux-amd64 v0.20000.0-rc.3 h1:lK52g
 haybarn-extensions.query.farm/go/libhaybarn/linux-amd64 v0.20000.0-rc.3/go.mod h1:Hu+9l77fybPL867aCPBEnJZr6N/TMmIkf8G1XM1Bfow=
 haybarn-extensions.query.farm/go/libhaybarn/linux-arm64 v0.20000.0-rc.3 h1:SQqk0cLIPPMl8mR59QKXD6IpVYdx48KoEzFgiU0xZhs=
 haybarn-extensions.query.farm/go/libhaybarn/linux-arm64 v0.20000.0-rc.3/go.mod h1:f0riGS9PWB5o4KdnUzp7aggMqk3z8wqAUzrlBe0p31w=
+haybarn-extensions.query.farm/go/libhaybarn/windows-amd64 v0.20000.0-rc.3 h1:ITMou4HfbEbiXhcrzMfP8AAjgnvMb9Wi4mUKVqdNkLk=
+haybarn-extensions.query.farm/go/libhaybarn/windows-amd64 v0.20000.0-rc.3/go.mod h1:V8K2tXkqHPl5D8EcyafEQxUzzsuNEZSM4A+WNILr6Y4=

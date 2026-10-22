@@ -7,6 +7,7 @@ require (
 	haybarn-extensions.query.farm/go/libhaybarn/darwin-arm64 v0.20000.0-rc.3
 	haybarn-extensions.query.farm/go/libhaybarn/linux-amd64 v0.20000.0-rc.3
 	haybarn-extensions.query.farm/go/libhaybarn/linux-arm64 v0.20000.0-rc.3
+	haybarn-extensions.query.farm/go/libhaybarn/windows-amd64 v0.20000.0-rc.3
 )
 
 require (

@@ -28,7 +28,21 @@
       "shared": "linux-arm64",
       "static_sha256": "aebeff2eb77267ba57591cab875f3e483d84840c39cefb87c16444358cc2df53",
       "shared_sha256": "0f24d710b4137e4455a08832af6173086517fc0b67a0595c4031e1ebe03f443b"
+    },
+    "windows-amd64": {
+      "static": "windows-amd64-mingw",
+      "shared": "windows-amd64",
+      "static_sha256": "1cfe3fcb242ded21c545283b7247e7a01376d6e3f7675b61b2b886647852c4ec",
+      "shared_sha256": "0699350ffec754bb9b06422a8d178b95330c2565eb6c50ee2ab5b45227c01be5"
     }
   },
-  "origin": "https://haybarn-extensions.query.farm/go"
+  "origin": "https://haybarn-extensions.query.farm/go",
+  "interim": {
+    "windows-amd64": {
+      "repository": "Query-farm-haybarn/haybarn",
+      "run": 39826425505,
+      "artifact": "haybarn-windows-amd64-mingw",
+      "source": "740200ff0702cfe9909c5e8de62c295e75a85be9"
+    }
+  }
 }
