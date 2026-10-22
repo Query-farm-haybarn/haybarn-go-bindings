@@ -1,4 +1,4 @@
-module github.com/duckdb/duckdb-go-bindings
+module github.com/Query-farm-haybarn/haybarn-go-bindings
 
 go 1.24
 

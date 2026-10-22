@@ -13,7 +13,7 @@ int32_t duckdb_register_static_extensions(void);
 */
 import "C"
 
-import _ "github.com/duckdb/duckdb-go-bindings/include"
+import _ "github.com/Query-farm-haybarn/haybarn-go-bindings/include"
 
 func init() {
 	// Register before opening a database. DuckDB reports registration failures
