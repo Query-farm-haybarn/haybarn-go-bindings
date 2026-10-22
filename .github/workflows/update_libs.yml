@@ -1,0 +1,81 @@
+name: Update Native Libraries
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write # push the pin commit
+  actions: write # start the tests on it
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  update-libs:
+    runs-on: ${{ github.repository_owner == 'duckdb' && 'namespace-profile-linux-small' || 'ubuntu-24.04' }}
+    timeout-minutes: 15
+    env:
+      LIB_DESTINATION: remote:duckdb-go
+    steps:
+      # Forks don't get the bucket secrets, so a run there would push a pin for a
+      # version it can't publish.
+      - name: Require this repository
+        if: github.repository != 'duckdb/duckdb-go-bindings'
+        run: |
+          echo "::error::Run this in duckdb/duckdb-go-bindings: forks don't get the bucket secrets."
+          exit 1
+      - name: Require a branch other than the default
+        if: github.ref_type != 'branch' || github.ref_name == github.event.repository.default_branch
+        run: |
+          echo "::error::Run this on a branch: the pin commit is pushed there for review."
+          exit 1
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          # Publish from a fresh module and build cache, not one restored from
+          # other runs.
+          cache: false
+      - name: Install rclone
+        id: rclone
+        uses: AnimMouse/setup-rclone@26ef2133e09fd383329a1d4c1fbe6a71db1976c9 # v1.12.0
+        with:
+          version: v1.75.2
+      - name: Package, pin and test native modules
+        run: make update.libs
+      # Push before publishing: a rejected push leaves nothing published.
+      - name: Push the pin commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet || git commit -m "Pin native modules $(jq -r .version duckdb-release.json)"
+          git push "https://x-access-token:$GH_TOKEN@github.com/$GITHUB_REPOSITORY.git" "HEAD:$GITHUB_REF_NAME"
+      # rclone builds the remote from these variables. Only the steps that use
+      # the bucket get its credentials.
+      - name: Publish native modules
+        env: &bucket
+          RCLONE_CONFIG_REMOTE_TYPE: s3
+          RCLONE_CONFIG_REMOTE_PROVIDER: Cloudflare
+          RCLONE_CONFIG_REMOTE_ACCESS_KEY_ID: ${{ secrets.DUCKDB_GO_BUCKET_ACCESS_KEY_ID }}
+          RCLONE_CONFIG_REMOTE_SECRET_ACCESS_KEY: ${{ secrets.DUCKDB_GO_BUCKET_SECRET_ACCESS_KEY }}
+          RCLONE_CONFIG_REMOTE_ENDPOINT: ${{ secrets.DUCKDB_GO_BUCKET_ENDPOINT_URL_S3 }}
+          RCLONE_CONFIG_REMOTE_REGION: auto
+          RCLONE_CONFIG_REMOTE_NO_CHECK_BUCKET: "true"
+        run: make publish.libs
+      # The bucket can't be listed through the public origin, so show what it
+      # holds, also after a failed or partial upload.
+      - name: List the published modules
+        if: ${{ !cancelled() && steps.rclone.outcome == 'success' }}
+        env: *bucket
+        run: rclone tree --size --modtime "$LIB_DESTINATION"
+      # Pushes made with the workflow token don't trigger workflows.
+      - name: Test the pin commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: gh workflow run run_tests.yml --ref "$GITHUB_REF_NAME"

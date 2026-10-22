@@ -1,0 +1,108 @@
+name: Tests
+on:
+  push:
+    branches:
+      - main
+      - "v[0-9]*"
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.head_ref || '' }}-${{ github.base_ref || '' }}-${{ github.ref != 'refs/heads/main' || github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  go-tests:
+    name: Test Pre-Built Libs
+    runs-on: &runner ${{ github.repository_owner == 'duckdb' && matrix.namespace || matrix.github }}
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      matrix:
+        platform:
+          - darwin-amd64
+          - darwin-arm64
+          - linux-amd64
+          - linux-arm64
+          - windows-amd64
+        # Keep native Intel coverage after merge without delaying PR checks.
+        exclude: &skip-intel-on-pr ${{ fromJSON(github.event_name == 'pull_request' && '[{"platform":"darwin-amd64"}]' || '[]') }}
+        include:
+          # Includes run after exclusions; do not reintroduce Intel on PRs.
+          # Intel has no Namespace profile, so runs-on falls back to github.
+          - &darwin-amd64 ${{ fromJSON(github.event_name == 'pull_request' && '[]' || '[{"platform":"darwin-amd64","github":"macos-15-intel"}]') }}
+          - &darwin-arm64 { platform: darwin-arm64, github: macos-26, namespace: namespace-profile-macos-arm64 }
+          - &linux-amd64 { platform: linux-amd64, github: ubuntu-24.04, namespace: namespace-profile-linux-small }
+          - &linux-arm64 { platform: linux-arm64, github: ubuntu-24.04-arm, namespace: namespace-profile-linux-arm64-small }
+          - { platform: windows-amd64, github: windows-2025, namespace: namespace-profile-windows-x64 }
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - name: Test ${{ matrix.platform }}
+        run: make test
+
+  dynamic-lib-tests:
+    name: Test Dynamic Libs
+    runs-on: *runner
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      matrix:
+        platform:
+          - darwin-amd64
+          - darwin-arm64
+          - linux-amd64
+          - linux-arm64
+        exclude: *skip-intel-on-pr
+        include:
+          - *darwin-amd64
+          - *darwin-arm64
+          - *linux-amd64
+          - *linux-arm64
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - name: Test ${{ matrix.platform }}
+        run: make test.dynamic
+
+  static-lib-tests:
+    name: Test Static Libs
+    runs-on: *runner
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      matrix:
+        platform:
+          - darwin-amd64
+          - darwin-arm64
+          - linux-amd64
+          - linux-arm64
+        exclude: *skip-intel-on-pr
+        include:
+          - *darwin-amd64
+          - *darwin-arm64
+          - *linux-amd64
+          - *linux-arm64
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - name: Test ${{ matrix.platform }}
+        run: make test.static

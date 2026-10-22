@@ -1,0 +1,84 @@
+name: Nightly
+run-name: Nightly - ${{ inputs.duckdb-sha }}
+
+on:
+  # Triggered from DuckDB's NotifyExternalRepositories workflow.
+  # See https://github.com/duckdb/duckdb/pull/24720 for details.
+  workflow_dispatch:
+    inputs:
+      duckdb-sha:
+        description: DuckDB commit SHA to test against
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+concurrency:
+  group: ${{ github.workflow }}-${{ inputs.duckdb-sha }}
+  cancel-in-progress: true
+
+jobs:
+  nightly:
+    name: DuckDB nightly (${{ matrix.name }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux
+            github: ubuntu-24.04
+            namespace: namespace-profile-linux-small
+          - name: macOS
+            github: macos-26
+            namespace: namespace-profile-macos-arm64
+          - name: Windows
+            github: windows-2025
+            namespace: namespace-profile-windows-x64
+    runs-on: ${{ github.repository_owner == 'duckdb' && matrix.namespace || matrix.github }}
+    timeout-minutes: 15
+    env:
+      DUCKDB_SHA: ${{ inputs.duckdb-sha }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+
+      - name: Install nightly artifacts
+        id: artifacts
+        run: |
+          # macOS runners use Bash 3.2, which lacks ${value,,}. Require the
+          # canonical lowercase form instead of normalizing the input.
+          if [[ ! "$DUCKDB_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::duckdb-sha must be a full lowercase hexadecimal commit SHA"
+            exit 1
+          fi
+
+          staging_key=${DUCKDB_SHA:0:10}
+          staging="https://duckdb-staging.duckdb.org/$staging_key"
+          version=$(curl -fLsS --retry 3 "$staging/latest_alpha_version.txt")
+          base_url="$staging/$version/duckdb/duckdb/github_release"
+          echo "Installing staging artifacts from $base_url"
+
+          echo "BASE_URL=$base_url" >> "$GITHUB_ENV"
+          echo "DUCKDB_VERSION=$version" >> "$GITHUB_ENV"
+          make use.libs BASE_URL="$base_url"
+
+      - name: Show nightly header diff
+        if: always()
+        run: |
+          git status --short
+          git diff --stat
+          git diff --numstat -- include/duckdb.h
+
+      - name: Test nightly static artifact
+        if: ${{ !cancelled() && steps.artifacts.outcome == 'success' }}
+        run: make test TAGS=duckdb_nightly
+
+      - name: Test nightly dynamic artifact
+        if: ${{ !cancelled() && steps.artifacts.outcome == 'success' }}
+        run: make test.dynamic TAGS=duckdb_nightly
