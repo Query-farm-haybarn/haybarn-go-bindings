@@ -3,11 +3,10 @@ module github.com/Query-farm-haybarn/haybarn-go-bindings
 go 1.24
 
 require (
-	go.duckdb.org/libduckdb/darwin-amd64 v0.20000.0
-	go.duckdb.org/libduckdb/darwin-arm64 v0.20000.0
-	go.duckdb.org/libduckdb/linux-amd64 v0.20000.0
-	go.duckdb.org/libduckdb/linux-arm64 v0.20000.0
-	go.duckdb.org/libduckdb/windows-amd64 v0.20000.0
+	haybarn-extensions.query.farm/go/libhaybarn/darwin-amd64 v0.20000.0-rc.3
+	haybarn-extensions.query.farm/go/libhaybarn/darwin-arm64 v0.20000.0-rc.3
+	haybarn-extensions.query.farm/go/libhaybarn/linux-amd64 v0.20000.0-rc.3
+	haybarn-extensions.query.farm/go/libhaybarn/linux-arm64 v0.20000.0-rc.3
 )
 
 require (

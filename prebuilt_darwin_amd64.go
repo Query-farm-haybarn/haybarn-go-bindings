@@ -4,4 +4,4 @@
 
 package duckdb_go_bindings
 
-import _ "go.duckdb.org/libduckdb/darwin-amd64"
+import _ "haybarn-extensions.query.farm/go/libhaybarn/darwin-amd64"
