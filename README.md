@@ -82,9 +82,8 @@ The module selects pre-built static libraries for all supported platforms:
 - darwin-arm64
 - linux-amd64 (x86-64-v3, i.e. AVX2, like the Haybarn 2.0 engine)
 - linux-arm64
-
-windows-amd64 is not available for Haybarn 2.0 yet: the Haybarn engine release
-does not build the MinGW static libraries cgo needs.
+- windows-amd64 (MinGW; from Haybarn 2.0.0-rc4, the first engine release
+  with MinGW static libraries)
 
 Platform detection and linking is handled automatically through cgo directives. `CGO_ENABLED=1` is required, and your system needs a C compiler.
 

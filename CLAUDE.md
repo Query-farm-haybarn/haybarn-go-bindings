@@ -56,9 +56,11 @@ strings -a "$LIB_WORK/native/<platform>/libhaybarn_static.a" | grep haybarn-exte
    requires bare semver tags, so the org-wide `haybarn-v*` convention does
    **not** apply. Native modules have no git tags.
 
-windows-amd64 is not pinned: the engine release has no MinGW static-libs
-archive yet. Re-add it to the manifest (with `static: windows-mingw`) once it
-does.
+windows-amd64 uses `haybarn-static-libs-windows-amd64-mingw.tar.gz` (the
+engine release's MinGW job; the clang-cl `windows-amd64` archive is MSVC ABI).
+Archives no release carries yet can be pinned through the manifest's
+`interim` map (run + artifact + source); `scripts/seed-interim.sh` puts them
+in brood's cache. `update_libs.yml` refuses to publish while `interim` is set.
 
 ## Trademark
 
