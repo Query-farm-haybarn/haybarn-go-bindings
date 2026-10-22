@@ -99,6 +99,7 @@ func fixtureRelease(t *testing.T, platform string) *release {
 	require.NoError(t, os.MkdirAll(filepath.Join(root, "include"), 0o755))
 	t.Chdir(root)
 	writeFile("LICENSE", []byte("fixture license\n"))
+	writeFile("NOTICE", []byte("fixture notice\n"))
 	writeFile("go.mod", fmt.Appendf(nil, "module example.com/bindings\n\ngo 1.24\n\nrequire example.com/native/%s v0.0.1\n", platform))
 	static := map[string]string{
 		"duckdb.h": "header\n", "duckdb_static_extension.h": "static header\n", "libhaybarn_static.a": "library",

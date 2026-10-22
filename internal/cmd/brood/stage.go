@@ -111,6 +111,7 @@ func (r *release) stage(platform string) {
 	writeFile(filepath.Join(dest, "static_extension_loader.c"), render(staticExtensionLoaderC, registrations))
 	writeFile(filepath.Join(dest, "go.mod"), fmt.Appendf(nil, "module %s\n\ngo %s\n", r.module(platform), r.goVersion))
 	copyFile("LICENSE", filepath.Join(dest, "LICENSE"))
+	copyFile("NOTICE", filepath.Join(dest, "NOTICE"))
 
 	provenance := map[string]string{"platform": platform, "sha256": digest, "url": url}
 	if r.DuckDBVersion != "" { // unset for a BASE_URL override

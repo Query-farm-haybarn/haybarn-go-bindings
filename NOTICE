@@ -1,0 +1,28 @@
+haybarn-go-bindings
+Copyright 2026 Query Farm LLC
+
+This product is part of Haybarn, an independent derived distribution of DuckDB
+published by Query Farm LLC. Haybarn is independent of and not endorsed by the
+DuckDB Foundation. DuckDB is a trademark of the DuckDB Foundation.
+
+This repository is a fork of duckdb/duckdb-go-bindings
+(https://github.com/duckdb/duckdb-go-bindings), licensed under the MIT License
+(see LICENSE), Copyright the DuckDB authors and Marc Boeker.
+
+Modifications made by Query Farm LLC relative to the upstream project:
+
+  - Go module path renamed from github.com/duckdb/duckdb-go-bindings to
+    github.com/Query-farm-haybarn/haybarn-go-bindings.
+  - The native library modules (one per platform, packaged by
+    internal/cmd/brood) are built from the Haybarn engine's GitHub Releases
+    (Query-farm-haybarn/haybarn) instead of DuckDB's, and published under the
+    Haybarn origin named in duckdb-release.json. They carry
+    libhaybarn_static.a, the Haybarn engine build, which embeds the single
+    Haybarn extension trust root and the haybarn-extensions.query.farm core and
+    community extension repository URLs. DuckDB-signed extensions do not load.
+  - The cgo linker flag -lduckdb_static is correspondingly -lhaybarn_static,
+    and the shared-library build links -lhaybarn. All other archive names
+    (extensions, capabilities), the C API headers (duckdb.h,
+    duckdb_static_extension.h) and the duckdb_ C symbol surface are preserved
+    unchanged for ABI compatibility with upstream DuckDB.
+  - Documentation and CI repointed at the Haybarn org.
