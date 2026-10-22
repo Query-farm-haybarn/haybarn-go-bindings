@@ -140,7 +140,11 @@ func (r *release) modcache() string { return filepath.Join(r.work, "modcache") }
 // localProxy serves the packaged modules, and the other modules from the
 // default proxy.
 func (r *release) localProxy() string {
-	return "file://" + filepath.ToSlash(r.modules()) + ",https://proxy.golang.org"
+	dir := filepath.ToSlash(r.modules())
+	if !strings.HasPrefix(dir, "/") {
+		dir = "/" + dir // file:///C:/... on Windows
+	}
+	return "file://" + dir + ",https://proxy.golang.org"
 }
 
 func (r *release) infoURL(platform string) string {
@@ -170,6 +174,7 @@ func (r *release) testEnv() map[string]string {
 	platform := r.platform()
 	return map[string]string{
 		"PLATFORM":       platform,
+		"LIB_WORK":       filepath.ToSlash(r.work),
 		"NATIVE_DIR":     filepath.ToSlash(r.native(platform)),
 		"DYNAMIC_DIR":    filepath.ToSlash(r.dynamic(platform)),
 		"MODULE_PROXY":   r.localProxy(),
