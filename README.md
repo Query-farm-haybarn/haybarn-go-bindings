@@ -1,8 +1,26 @@
-# duckdb-go-bindings
+# haybarn-go-bindings
 
-![Tests status](https://github.com/duckdb/duckdb-go-bindings/actions/workflows/run_tests.yml/badge.svg)
+![Tests status](https://github.com/Query-farm-haybarn/haybarn-go-bindings/actions/workflows/run_tests.yml/badge.svg)
 
-This repository wraps DuckDB's C API calls in Go native types and functions.
+Low-level cgo bindings for **Haybarn**, an independent derived distribution of
+DuckDB published by Query Farm LLC ("Haybarn, powered by DuckDB"). This module
+is a fork of [`duckdb/duckdb-go-bindings`](https://github.com/duckdb/duckdb-go-bindings);
+it wraps the same C API in Go native types and functions, but links the
+**Haybarn** static engine (`libhaybarn_static.a`), which embeds the Haybarn
+extension trust root and the `haybarn-extensions.query.farm` extension
+repositories. Most code consumes this through the
+[`haybarn-go`](https://github.com/Query-farm-haybarn/haybarn-go) driver rather
+than directly.
+
+> Haybarn is **independent of and not endorsed by the DuckDB Foundation**.
+> DuckDB is a trademark of the DuckDB Foundation.
+
+This branch (`haybarn-2.0`) tracks Haybarn 2.0 (DuckDB v2.0.0). The 1.5 line
+lives on the `haybarn` branch. Module versions mirror upstream's scheme:
+Haybarn v2.0.0 maps to `v0.20000.x`, release candidates to `v0.20000.0-rc.N`.
+
+The remainder of this README is inherited from upstream and adapted where the
+Haybarn build differs.
 
 Minimum Go version: 1.24.
 
@@ -55,16 +73,18 @@ Older versions require platform-specific imports (e.g., `github.com/duckdb/duckd
 Simply import the module in your Go project:
 
 ```go
-import "github.com/duckdb/duckdb-go-bindings"
+import "github.com/Query-farm-haybarn/haybarn-go-bindings"
 ```
 
 The module selects pre-built static libraries for all supported platforms:
 
 - darwin-amd64
 - darwin-arm64
-- linux-amd64
+- linux-amd64 (x86-64-v3, i.e. AVX2, like the Haybarn 2.0 engine)
 - linux-arm64
-- windows-amd64
+
+windows-amd64 is not available for Haybarn 2.0 yet: the Haybarn engine release
+does not build the MinGW static libraries cgo needs.
 
 Platform detection and linking is handled automatically through cgo directives. `CGO_ENABLED=1` is required, and your system needs a C compiler.
 
@@ -84,10 +104,9 @@ works as before. The libraries now come from the origin in
 `duckdb-release.json` instead of GitHub, so builds that restrict module
 downloads must allow it.
 
-**Dynamic libraries (`duckdb_use_lib`):** nothing to do. The shared library
-registers its own extensions. DuckDB v2 publishes it as
-`duckdb-shared-libs-<platform>.tar.gz`, or use DuckDB's install script (see
-[Dynamic Libraries](#alternative-dynamic-libraries)).
+**Dynamic libraries (`duckdb_use_lib`):** link `-lhaybarn`. The shared library
+registers its own extensions. The Haybarn release publishes it as
+`libhaybarn-<platform>.zip` (see [Dynamic Libraries](#alternative-dynamic-libraries)).
 
 **Custom static libraries (`duckdb_use_static_lib`):** your build needs changes
 (see [Custom Static Libraries](#alternative-custom-static-libraries)):
@@ -96,9 +115,9 @@ registers its own extensions. DuckDB v2 publishes it as
   `duckdb_register_static_extensions()`, which the bindings call before any
   database is opened. Without it, the build fails with an undefined symbol.
 - Link the new set of archives: the third-party libraries are now part of
-  `libduckdb_static.a`, `libduckdb_generated_extension_loader.a` and DuckDB's
+  `libhaybarn_static.a`, `libduckdb_generated_extension_loader.a` and the
   `bundle-library` target are gone, and `libduckdb_httplib.a` and
-  `libduckdb_loadable_extensions.a` are new. Put `libduckdb_static.a` last.
+  `libduckdb_loadable_extensions.a` are new. Put `libhaybarn_static.a` last.
 - If your build already registers its extensions before `main`
   (`static_extension_autoregister.cpp`, linked with
   `-Wl,-u,duckdb_register_static_extensions`), it keeps working, since
@@ -124,7 +143,10 @@ repository root with `prebuilt` (the default), `static`, `dynamic` or
 ## Updating native libraries
 
 The native libraries are published as one Go module per platform, outside this
-repository: their static archives exceed GitHub's file size limit.
+repository: their static archives exceed GitHub's file size limit. For Haybarn
+they are built from the `haybarn-static-libs-<platform>.tar.gz` assets of a
+Haybarn engine release (never from DuckDB's binaries) and served from the
+Haybarn extensions bucket under `https://haybarn-extensions.query.farm/go`.
 `duckdb-release.json` pins the DuckDB build, native module version, upstream
 tarball checksums and publication origin.
 
@@ -154,18 +176,19 @@ link the runner's platform, linux-amd64. The Tests workflow is the first to link
 the other platforms, after the upload, so a failure there needs a new native
 module version.
 
-The workflow refuses to run in a fork or on the default branch. It needs three
-repository secrets for an R2 API token with Object Read & Write permission on
-the bucket:
+The workflow refuses to run in a fork or on the default branch. It uses the
+Haybarn org's R2 secrets, which must be granted to this repository:
 
-| Secret                               | Value                                           |
-| ------------------------------------ | ----------------------------------------------- |
-| `DUCKDB_GO_BUCKET_ACCESS_KEY_ID`     | the token's access key ID                       |
-| `DUCKDB_GO_BUCKET_SECRET_ACCESS_KEY` | the token's secret access key                   |
-| `DUCKDB_GO_BUCKET_ENDPOINT_URL_S3`   | `https://<account ID>.r2.cloudflarestorage.com` |
+| Secret             | Value                                           |
+| ------------------ | ----------------------------------------------- |
+| `R2_ACCESS_KEY_ID` | the token's access key ID                       |
+| `R2_SECRET_KEY_ID` | the token's secret access key (despite the name) |
+| `R2_ENDPOINT`      | `https://<account ID>.r2.cloudflarestorage.com` |
+| `R2_BUCKET`        | the extensions bucket                           |
 
-A bucket in the EU jurisdiction needs the
-`https://<account ID>.eu.r2.cloudflarestorage.com` endpoint.
+Before the pinned modules are published, the Tests workflow runs
+`make test.packaged`, which packages them from the pinned archives and tests
+them through a local module proxy.
 
 ### Locally
 
@@ -174,7 +197,7 @@ With an rclone remote for the bucket, run the same steps yourself:
 ```bash
 make update.libs   # package, pin and test
 git commit -am "Pin native modules $(jq -r .version duckdb-release.json)"
-LIB_DESTINATION=<remote>:duckdb-go make publish.libs
+LIB_DESTINATION=<remote>:<bucket>/go make publish.libs
 git push
 ```
 
@@ -189,39 +212,9 @@ packaging refuses versions that already exist at the origin. Update the bindings
 for any C API changes.
 
 Downloads and packaged modules stay in `LIB_WORK`, outside the checkout
-(default: `duckdb-go-libraries` in the system's temporary directory).
+(default: `haybarn-go-libraries` in the system's temporary directory).
 `go run ./internal/cmd/brood env` shows the resolved paths. For DuckDB 1.4 LTS,
 use the `v1.4-andium` branch's release process.
-
-## Nightly artifact validation
-
-The `Nightly` workflow accepts a full DuckDB commit SHA and downloads matching
-v2 staging artifacts. It compiles against their header, shows the header diff,
-exercises static and dynamic linking, verifies the linked source ID, and loads
-`httpfs` from a clean extension directory. It uses an external scratch directory
-and a local workspace replacement, without publishing anything.
-
-The same targets work locally for an alternate build:
-
-```bash
-export BASE_URL="https://duckdb-staging.duckdb.org/<sha-prefix>/<version>/duckdb/duckdb/github_release"
-export DUCKDB_VERSION="<version>" DUCKDB_SHA="<full-sha>"
-make use.libs
-make test TAGS=duckdb_nightly
-make test.dynamic TAGS=duckdb_nightly
-```
-
-`use.libs` installs the build's header and writes an ignored `go.work` selecting
-its native module. `BASE_URL` overrides the manifest's upstream URL and drops
-its checksum pins, so only the version and source ID supplied through
-`DUCKDB_VERSION` and `DUCKDB_SHA` are checked. To return to the pinned build:
-
-```bash
-make unuse.libs
-unset BASE_URL DUCKDB_VERSION DUCKDB_SHA
-```
-
-`unuse.libs` removes the local workspace and restores the pinned header.
 
 ## Build Configuration
 
@@ -231,14 +224,10 @@ By default (no build tags needed), the module automatically links against the pr
 
 ### Alternative: Custom Static Libraries
 
-To use your own DuckDB v2 static libraries instead of the pre-built ones, use
+To use your own Haybarn 2.0 static libraries instead of the pre-built ones, use
 the `duckdb_use_static_lib` build tag and provide the libraries through
-`CGO_LDFLAGS`. DuckDB's install script fetches the static libraries of a release
-for the current platform into `~/.duckdb/lib/<version>/release_<platform>`:
-
-```bash
-curl https://install.duckdb.org | DUCKDB_INSTALL=static sh
-```
+`CGO_LDFLAGS`. A Haybarn engine release publishes them per platform as
+`haybarn-static-libs-<platform>.tar.gz`.
 
 Statically linked extensions are only loaded once they are registered with
 DuckDB. With `duckdb_use_static_lib`, the bindings call
@@ -260,10 +249,10 @@ describe functions for the archives you link, and compile it against the
 `duckdb_static_extension.h` that comes with the libraries. The loader registers
 capabilities before extensions.
 
-Then link the loader, the extension archives, and `libduckdb_static.a` last:
+Then link the loader, the extension archives, and `libhaybarn_static.a` last:
 
 ```bash
-LIBS="-lduckdb_static_extension_loader -lduckdb_httplib -lduckdb_loadable_extensions -ljson_extension -lduckdb_static"
+LIBS="-lduckdb_static_extension_loader -lduckdb_httplib -lduckdb_loadable_extensions -ljson_extension -lhaybarn_static"
 
 # Darwin/macOS
 CGO_ENABLED=1 \
@@ -290,19 +279,18 @@ make test.static
 
 ### Alternative: Dynamic Libraries
 
-To link against a shared DuckDB library, use the `duckdb_use_lib` build tag.
-`curl https://install.duckdb.org | DUCKDB_INSTALL=shared sh` installs the shared
-library of a release into `~/.duckdb/lib/<version>/release_<platform>`.
+To link against the shared Haybarn library, use the `duckdb_use_lib` build tag.
+A Haybarn engine release publishes it as `libhaybarn-<platform>.zip`.
 
 ```bash
 # Darwin/macOS
 CGO_ENABLED=1 \
-  CGO_LDFLAGS="-lduckdb -L/path/to/dir -Wl,-rpath,/path/to/dir" \
+  CGO_LDFLAGS="-lhaybarn -L/path/to/dir -Wl,-rpath,/path/to/dir" \
   go build -tags=duckdb_use_lib
 
 # Linux
 CGO_ENABLED=1 \
-  CGO_LDFLAGS="-lduckdb -L/path/to/dir" \
+  CGO_LDFLAGS="-lhaybarn -L/path/to/dir" \
   LD_LIBRARY_PATH=/path/to/dir \
   go build -tags=duckdb_use_lib
 ```
