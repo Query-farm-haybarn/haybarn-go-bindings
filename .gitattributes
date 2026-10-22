@@ -1,2 +1,6 @@
 # Generated files are LF on every platform, so their goldens must be too.
 internal/cmd/brood/testdata/*.golden text eol=lf
+# Copied into the native modules: Windows checkouts must package the same
+# bytes (go.sum hashes) as everyone else.
+LICENSE text eol=lf
+NOTICE text eol=lf
