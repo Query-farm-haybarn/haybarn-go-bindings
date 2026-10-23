@@ -78,8 +78,7 @@ import "github.com/Query-farm-haybarn/haybarn-go-bindings"
 
 The module selects pre-built static libraries for all supported platforms:
 
-- darwin-amd64
-- darwin-arm64
+- darwin-arm64 (Haybarn 2.0 ships no macOS x86_64 build)
 - linux-amd64 (x86-64-v3, i.e. AVX2, like the Haybarn 2.0 engine)
 - linux-arm64
 - windows-amd64 (MinGW; from Haybarn 2.0.0-rc4, the first engine release

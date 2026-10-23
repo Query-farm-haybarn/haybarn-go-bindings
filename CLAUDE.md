@@ -47,7 +47,9 @@ strings -a "$LIB_WORK/native/<platform>/libhaybarn_static.a" | grep haybarn-exte
 1. Edit `duckdb-release.json`: `version` (new native module version — never
    reuse a published one), `source` (engine commit), `time`, `base_url`
    (the Haybarn release download URL) and the per-platform checksums from the
-   release's `SHA256SUMS`.
+   release's `SHA256SUMS`. From rc6 the macOS shared library is
+   `libhaybarn-osx-arm64.zip`, so darwin-arm64's `shared` becomes `osx-arm64`
+   (rc5 and earlier: `osx-universal`).
 2. `make update.libs` (package + pin + packaged tests), or run the
    **Update Native Libraries** workflow on a branch (it also publishes).
 3. If `duckdb.h` changed, reflect new types/functions in the Go bindings.
@@ -55,6 +57,9 @@ strings -a "$LIB_WORK/native/<platform>/libhaybarn_static.a" | grep haybarn-exte
    `v0.200NN.x` (Haybarn vX.Y.Z → `v0.XYYZZ.x`; `-rc.N` for engine RCs). Go
    requires bare semver tags, so the org-wide `haybarn-v*` convention does
    **not** apply. Native modules have no git tags.
+
+There is no darwin-amd64 module: Haybarn 2.0 ships no macOS x86_64 build
+(engine, static libs or clients), so darwin/amd64 has no prebuilt import.
 
 windows-amd64 uses `haybarn-static-libs-windows-amd64-mingw.tar.gz` (the
 engine release's MinGW job; the clang-cl `windows-amd64` archive is MSVC ABI).

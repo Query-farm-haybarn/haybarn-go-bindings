@@ -5,12 +5,6 @@
   "time": "2026-10-22T14:06:48Z",
   "base_url": "https://github.com/Query-farm-haybarn/haybarn/releases/download/haybarn-v2.0.0-rc3",
   "platforms": {
-    "darwin-amd64": {
-      "static": "osx-amd64",
-      "shared": "osx-universal",
-      "static_sha256": "d8e8a3f77659fefcc7c0f2d81806947c0a915a9a01f752aa854fe3e3b8a1d00e",
-      "shared_sha256": "034e7ba3360649e9d066f14b375e0452a8de636d2e90989b8fdaac5b0957b830"
-    },
     "darwin-arm64": {
       "static": "osx-arm64",
       "shared": "osx-universal",
