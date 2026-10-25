@@ -1,33 +1,33 @@
 {
-  "version": "v0.20000.0-rc.6",
+  "version": "v0.20000.0-rc.7",
   "duckdb_version": "v2.0.0",
-  "source": "5ab8a76db12ad1ad63c4e4997bce37602a9d0b43",
-  "time": "2026-10-24T19:30:17Z",
-  "base_url": "https://github.com/Query-farm-haybarn/haybarn/releases/download/haybarn-v2.0.0-rc6",
+  "source": "74a0e809885f32fa8751282bda38cfc835c5bdac",
+  "time": "2026-10-25T19:25:26Z",
+  "base_url": "https://github.com/Query-farm-haybarn/haybarn/releases/download/haybarn-v2.0.0-rc7",
   "platforms": {
     "darwin-arm64": {
       "static": "osx-arm64",
       "shared": "osx-arm64",
-      "static_sha256": "874e4b057418a78f8d1e079d92a7bbcb5f119ed8f0859f5787e47a99e4d07fef",
-      "shared_sha256": "deb15a2d720ca7c729b3ba036a4672104b07f65523396fe65cb5cfeec8d0473b"
+      "static_sha256": "1fbc61ad7a6241c869cbb21f7549735ec37f7dfe0f1339e1006827d4b1b3a725",
+      "shared_sha256": "67f9f8ae97668b95d391166576a6fc752891b091b0982cbe80907e0ef77fbbcd"
     },
     "linux-amd64": {
       "static": "linux-amd64",
       "shared": "linux-amd64",
-      "static_sha256": "83611b7d26765880c363ce07874f35f99948edb52609d9f990ed4a7de142f3a9",
-      "shared_sha256": "297c6b24b09e54b9425570ca5d4a2fba1e44444aedef18939145e39c5b88892c"
+      "static_sha256": "d7f706d78247ceee0bfaf5113197333ec5ce9b8a66d3a0a8bbf174ae8ffcce94",
+      "shared_sha256": "5a328065f45b1a1f6fc5cba59c0eb7521648e736cea23d508a36a2c47bba3cc2"
     },
     "linux-arm64": {
       "static": "linux-arm64",
       "shared": "linux-arm64",
-      "static_sha256": "8634e0cd2ca30e2d71cab503829881936083212d9422104a4feaf183a416ece7",
-      "shared_sha256": "eb27fbf41efaed531b92de136eeceff0d7903e282632d7f349a379740717dd36"
+      "static_sha256": "75ad57799e6760aed6b37367dc1f03dac0e8b7081ad93c8cf2464ce941fb5cac",
+      "shared_sha256": "32a09fadaa7aa363ffb6a0d70f288d3e62eb9578753290d0fb89ddd59cad6526"
     },
     "windows-amd64": {
       "static": "windows-amd64-mingw",
       "shared": "windows-amd64",
-      "static_sha256": "d030ffd4beb8032104079c689cacaae3cb559e2372cdbaa375cd3f63ead3f45a",
-      "shared_sha256": "9e232541d32d42454e1921f8c01acf389d894f624aab8b6813fa1cf7dded0093"
+      "static_sha256": "bdb732222ad40c165fb9fc7e88cffc7d373f5c3674f1b0fc0e8ecbbb75f7b9c1",
+      "shared_sha256": "a0d0ece6398d3b5a103ad91efd09b991cea8cfcb6de0b3095ee0c1cc8fa34b2a"
     }
   },
   "origin": "https://haybarn-extensions.query.farm/go"
