@@ -15,9 +15,10 @@ than directly.
 > Haybarn is **independent of and not endorsed by the DuckDB Foundation**.
 > DuckDB is a trademark of the DuckDB Foundation.
 
-This branch (`haybarn-2.0`) tracks Haybarn 2.0 (DuckDB v2.0.0). The 1.5 line
+This branch (`haybarn-2.0`) tracks Haybarn 2.0 (DuckDB v2.0.1). The 1.5 line
 lives on the `haybarn` branch. Module versions mirror upstream's scheme:
-Haybarn v2.0.0 maps to `v0.20000.x`, release candidates to `v0.20000.0-rc.N`.
+Haybarn v2.0.1 maps to `v0.20001.x`, release candidates to `v0.20001.0-rc.N`
+(v2.0.0: `v0.20000.x`).
 
 The remainder of this README is inherited from upstream and adapted where the
 Haybarn build differs.
